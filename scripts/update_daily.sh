@@ -43,6 +43,7 @@ new=$((after - before))
 
 $PY scripts/validate.py >> "$LOG" 2>&1
 $PY scripts/make_dataset.py >> "$LOG" 2>&1
+cp data/validation_flags.csv data/publish/controles_qualite.csv
 cp data/publish/*.csv data/publish-hf/data/
 
 last_new=$(tail -n 1 data/bulletins.csv | cut -d, -f1)
