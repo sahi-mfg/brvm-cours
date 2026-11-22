@@ -1,0 +1,15 @@
+# Sources volumineuses et caches (re-téléchargeables / régénérables)
+pdf/
+cache/
+txt/
+.venv/
+__pycache__/
+*.pyc
+*.log
+*.part
+# Binaires compilés depuis les .swift
+scripts/pdfchars
+scripts/pdf2txt
+# Données : publiées sur mandy / Hugging Face, pas dans git
+data/
+.DS_Store
