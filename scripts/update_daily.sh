@@ -33,7 +33,7 @@ today=$($PY scripts/dates.py today)
 before=$(wc -l < data/bulletins.csv)
 $PY scripts/build.py >> "$LOG" 2>&1
 # Bulletins publiés en anglais sous le nom français : on les remplace par la version française.
-if awk -F, 'NR>1 && $5==0' data/bulletins.csv | grep -q .; then
+if awk -F, 'NR>1 && $5==0 && $2 !~ /_bfin/' data/bulletins.csv | grep -q .; then
   ./scripts/refetch_english.sh >> "$LOG" 2>&1
   $PY scripts/build.py >> "$LOG" 2>&1
 fi
