@@ -5,8 +5,9 @@ Mobilières (BRVM, Abidjan), publié chaque jour en PDF, en tables propres et co
 dividendes et ratios des 50 sociétés cotées depuis janvier 2015, plus les indices du marché.
 
 Le dataset lui-même (environ 132 000 lignes, mis à jour chaque jour de bourse) est publié sur
-[mandy](https://dataset.mandia.org/mohamedfrancissahi/brvm-cours-actions-2015-2026), sous licence
-CC BY 4.0. Ce dépôt contient le code qui le produit.
+[Hugging Face](https://huggingface.co/datasets/ihasthetruth/brvm-cours-actions-2015-2026) (mis à jour
+automatiquement) et sur [mandy](https://dataset.mandia.org/mohamedfrancissahi/brvm-cours-actions-2015-2026),
+sous licence CC BY 4.0. Ce dépôt contient le code qui le produit.
 
 ## Ce que fait le pipeline
 
