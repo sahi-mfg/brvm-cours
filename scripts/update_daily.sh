@@ -13,7 +13,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 PY="uv run --quiet python"
 LOG="$ROOT/update.log"
-HF_REPO="${HF_REPO:-}"   # ex. mohamedfrancissahi/brvm-cours-actions-2015-2026 (à définir après création du dépôt HF)
+HF_REPO="${HF_REPO:-ihasthetruth/brvm-cours-actions-2015-2026}"   # dataset Hugging Face publié à chaque nouvelle séance
 
 last=$(tail -n 1 data/bulletins.csv | cut -d, -f1)
 start=$($PY scripts/dates.py shift "$last" 1)
@@ -58,4 +58,4 @@ if [[ -n "$HF_REPO" ]]; then
     && published="publié sur Hugging Face" || { echo "ÉCHEC publication HF ($HF_REPO), voir $LOG"; exit 1; }
 fi
 
-echo "BRVM : +$new séance(s), dernière le $last_new ($n_actions sociétés), $issues anomalie(s) de lecture sur ces séances ; $published. Mandy : à republier à la main."
+echo "BRVM : +$new séance(s), dernière le $last_new ($n_actions sociétés), $issues anomalie(s) de lecture sur ces séances ; $published. Mandy : à republier à la main (data/publish/)."
