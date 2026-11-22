@@ -8,16 +8,16 @@
 # Sortie : silencieuse si rien de nouveau. Une ligne de résumé s'il y a de nouvelles séances.
 # Code de sortie non nul en cas d'échec : Hermes envoie alors une alerte.
 set -euo pipefail
-export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-ROOT="$HOME/projets/perso/brvm-cours"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
-PY="$ROOT/.venv/bin/python"
+PY="uv run --quiet python"
 LOG="$ROOT/update.log"
 HF_REPO="${HF_REPO:-}"   # ex. mohamedfrancissahi/brvm-cours-actions-2015-2026 (à définir après création du dépôt HF)
 
 last=$(tail -n 1 data/bulletins.csv | cut -d, -f1)
-start=$(date -j -v+1d -f %Y-%m-%d "$last" +%Y-%m-%d)
-today=$(date +%Y-%m-%d)
+start=$($PY scripts/dates.py shift "$last" 1)
+today=$($PY scripts/dates.py today)
 [[ "$start" > "$today" ]] && exit 0
 
 {
@@ -25,18 +25,24 @@ today=$(date +%Y-%m-%d)
   # Un bulletin peut manquer à cause d'une panne passagère du site (cas du 30/10/2026) ou parce
   # qu'il n'est pas encore en ligne : on retire les marqueurs « missing » des 30 derniers jours
   # et on retente toute cette période. Les jours fériés restent simplement marqués « missing ».
-  for i in $(seq 0 29); do rm -f "pdf/missing_$(date -j -v-${i}d +%Y%m%d)"; done
-  ./scripts/download.sh "$(date -j -v-29d +%Y-%m-%d)" "$today"
+  since=$($PY scripts/dates.py shift "$today" -29)
+  for ymd in $($PY scripts/dates.py weekdays "$since" "$today"); do rm -f "pdf/missing_$ymd"; done
+  ./scripts/download.sh "$since" "$today"
 } >> "$LOG" 2>&1
 
 before=$(wc -l < data/bulletins.csv)
-"$PY" scripts/build.py >> "$LOG" 2>&1
+$PY scripts/build.py >> "$LOG" 2>&1
+# Bulletins publiés en anglais sous le nom français : on les remplace par la version française.
+if awk -F, 'NR>1 && $5==0 && $2 !~ /_bfin/' data/bulletins.csv | grep -q .; then
+  ./scripts/refetch_english.sh >> "$LOG" 2>&1
+  $PY scripts/build.py >> "$LOG" 2>&1
+fi
 after=$(wc -l < data/bulletins.csv)
 new=$((after - before))
 [[ $new -le 0 ]] && exit 0
 
-"$PY" scripts/validate.py >> "$LOG" 2>&1
-"$PY" scripts/make_dataset.py >> "$LOG" 2>&1
+$PY scripts/validate.py >> "$LOG" 2>&1
+$PY scripts/make_dataset.py >> "$LOG" 2>&1
 cp data/publish/*.csv data/publish-hf/data/
 
 last_new=$(tail -n 1 data/bulletins.csv | cut -d, -f1)

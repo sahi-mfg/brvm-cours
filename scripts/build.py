@@ -2,13 +2,13 @@
 import os, sys, json, glob, csv, re
 from multiprocessing import Pool
 sys.path.insert(0, os.path.dirname(__file__))
-from lines import page_lines
+from lines import page_lines, EXTRACTOR
 from parse_boc import parse_pdf, HEADER_FIELDS
 from parse_indices import parse_indices, summary_page
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE = os.path.join(ROOT, 'cache')
-PARSER_VERSION = '12'
+PARSER_VERSION = '13'  # 13 : extraction PyMuPDF (multiplateforme) au lieu de PDFKit
 
 
 def work(path):
@@ -19,7 +19,10 @@ def work(path):
         if c.get('v') == PARSER_VERSION:
             return c
     try:
-        pp = os.path.join(CACHE, 'pages', base + '.json')
+        # Le cache des lignes dépend de l'extracteur : changer d'extracteur = nouveau dossier.
+        pdir = os.path.join(CACHE, 'pages-' + EXTRACTOR)
+        os.makedirs(pdir, exist_ok=True)
+        pp = os.path.join(pdir, base + '.json')
         if os.path.exists(pp):
             pages = {int(k): v for k, v in json.load(open(pp)).items()}
         else:
