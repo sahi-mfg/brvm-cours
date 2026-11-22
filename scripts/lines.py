@@ -1,15 +1,39 @@
-"""Turn PDFKit char dump into lines of cells (cell = run of chars separated by gaps > GAP pt)."""
-import subprocess, collections
+"""Turn the PDF's characters into lines of cells (cell = run of chars separated by gaps > GAP pt).
+
+Characters come from PyMuPDF (cross-platform). Coordinates are converted to a bottom-left origin
+(y grows upwards), as in the original PDFKit extractor, so that the parser's geometry is unchanged.
+"""
+import collections
+import pymupdf
 GAP = 3.5
-BIN = __file__.rsplit('/',1)[0] + '/pdfchars'
+EXTRACTOR = "pymupdf"
+
+
+def page_chars(pdf):
+    """{page: [(x0, y0, x1, y1, char)]}, y measured from the bottom of the page."""
+    pages = collections.defaultdict(list)
+    with pymupdf.open(pdf) as doc:
+        for pno, page in enumerate(doc, start=1):
+            H = page.rect.height
+            for b in page.get_text("rawdict")["blocks"]:
+                for l in b.get("lines", []):
+                    for s in l["spans"]:
+                        # Vertical extent from the baseline and font size, not from the font's own
+                        # ascender: two fonts on the same line then get the same top, as with PDFKit.
+                        size = s["size"]
+                        for c in s["chars"]:
+                            ch = c["c"]
+                            if not ch.strip() or not ch.isprintable():   # e.g. \x03 fillers
+                                continue
+                            x0, _, x1, _ = c["bbox"]
+                            base = H - c["origin"][1]
+                            pages[pno].append((round(x0, 1), round(base - 0.25 * size, 1),
+                                               round(x1, 1), round(base + 0.75 * size, 1), ch))
+    return pages
+
 
 def page_lines(pdf):
-    out = subprocess.run([BIN, pdf], capture_output=True, text=True).stdout
-    pages = collections.defaultdict(list)
-    for l in out.split('\n'):
-        p = l.split('\t')
-        if len(p) < 6: continue
-        pages[int(p[0])].append((float(p[1]), float(p[2]), float(p[3]), float(p[4]), p[5]))
+    pages = page_chars(pdf)
     res = {}
     for pg, chars in pages.items():
         vis = [c for c in chars if c[4].strip()]

@@ -13,8 +13,8 @@ CC BY 4.0. Ce dépôt contient le code qui le produit.
 1. **Téléchargement** (`scripts/download.sh`, `scripts/fetch_one.sh`) : un PDF par jour ouvré depuis
    `brvm.org`, avec repli sur l'archive `bfin.brvm.org`. Les jours sans bulletin sont marqués
    `missing_AAAAMMJJ` et retentés pendant 30 jours.
-2. **Extraction** (`scripts/pdfchars.swift`, `scripts/lines.py`) : position de chaque caractère dans le
-   PDF via PDFKit, puis regroupement en lignes et en cellules.
+2. **Extraction** (`scripts/lines.py`) : position de chaque caractère dans le PDF via PyMuPDF, puis
+   regroupement en lignes et en cellules.
 3. **Lecture des tableaux** (`scripts/parse_boc.py`, `scripts/parse_indices.py`) : chaque colonne est
    identifiée par son en-tête, ce qui permet de suivre les trois mises en page successives du bulletin
    (2015–2017, 2018–2022, 2023 et après). Le résultat de chaque PDF est mis en cache : une mise à jour
@@ -34,17 +34,20 @@ CC BY 4.0. Ce dépôt contient le code qui le produit.
 
 ## Utilisation
 
-Prérequis : macOS (l'extraction utilise PDFKit) et Python 3.11, sans dépendance externe.
+Prérequis : [uv](https://docs.astral.sh/uv/), `bash` et `curl`. Fonctionne sous Linux, macOS et Windows (WSL).
+uv installe lui-même Python 3.11+ et PyMuPDF.
 
 ```sh
-swiftc -O scripts/pdfchars.swift -o scripts/pdfchars    # une fois
-./scripts/download.sh 2015-01-01 2026-11-20             # ~3 Go de PDF
-python3 scripts/build.py
-python3 scripts/validate.py
-python3 scripts/make_dataset.py                          # -> data/publish/
+uv sync
+./scripts/download.sh 2015-01-01 2026-11-20      # ~3 Go de PDF
+uv run python scripts/build.py
+./scripts/refetch_english.sh                     # bulletins publiés en anglais -> version française
+uv run python scripts/build.py
+uv run python scripts/validate.py
+uv run python scripts/make_dataset.py            # -> data/publish/
 ```
 
-Mise à jour incrémentale : `./scripts/update_daily.sh`.
+Mise à jour incrémentale (téléchargement, reconstruction, contrôles) : `./scripts/update_daily.sh`.
 
 ## Limites connues
 
